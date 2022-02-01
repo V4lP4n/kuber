@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hw
+  labels:
+    app.kubernetes.io/name: hw
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hw
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hw
+    spec:      
+      containers:
+      - image: nginx:latest
+        name: app
+        ports:
+          - containerPort: 80
+    
