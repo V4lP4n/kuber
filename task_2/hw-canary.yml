@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: hw-canary
+spec:
+ selector:
+  matchLabels:
+   app: hw-app
+ replicas: 3
+ template:
+  metadata:
+   labels:
+    app: hw-app
+    version: "2.0"
+  spec:
+    containers:
+    - image: nginx:latest
+      name: nginx
+      ports:
+      - containerPort: 80
+      volumeMounts:
+        - name: config-nginx
+          mountPath: /etc/nginx/conf.d
+    volumes:
+      - name: config-nginx
+        configMap:
+          name: nginx-configmap2
