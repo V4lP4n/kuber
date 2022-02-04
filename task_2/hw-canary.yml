@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: hw-app
-  name: hw-app
+  name: hw-canary
 spec:
   replicas: 3
   selector:
