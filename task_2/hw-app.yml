@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hw-app
+  name: hw-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hw-app
+  template:
+    metadata:
+      labels:
+        app: hw-app
+    spec:
+      containers:
+      - image: local-nginx:latest
+        name: local-nginx
+        ports:
+        - containerPort: 80
+        
