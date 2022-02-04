@@ -13,4 +13,4 @@ data:
 kind: ConfigMap
 metadata:
   creationTimestamp: null
-  name: nginx-configmap
+  name: nginx-configmap2
