@@ -15,8 +15,9 @@ spec:
         app: hw-app
     spec:
       containers:
-      - image: local-nginx:latest
+      - image: localhost:5000/local-nginx
         name: local-nginx
+        imagePullPolicy: Never
         ports:
         - containerPort: 80
         
