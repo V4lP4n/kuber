@@ -17,7 +17,7 @@ spec:
       containers:
       - image: localhost:5000/local-nginx
         name: local-nginx
-        imagePullPolicy: Never
+        # imagePullPolicy: Never
         ports:
         - containerPort: 80
         
