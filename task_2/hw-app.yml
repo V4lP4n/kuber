@@ -15,9 +15,15 @@ spec:
         app: hw-app
     spec:
       containers:
-      - image: localhost:5000/local-nginx
-        name: local-nginx
-        # imagePullPolicy: Never
+      - image: nginx:latest
+        name: nginx
         ports:
         - containerPort: 80
+        volumeMounts:
+          - name: config-nginx
+            mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: config-nginx
+          configMap:
+            name: nginx-configmap
         
