@@ -1,0 +1,157 @@
+---
+
+apiVersion: v1
+data:
+  default.conf: |-
+    server {
+        listen 80 default_server;
+        server_name _;
+        default_type text/plain;
+
+        location / {
+            return 200 'qwe $hostname\n v2';
+        }
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: nginx-configmap2
+
+---
+
+
+apiVersion: v1
+data:
+  default.conf: |-
+    server {
+        listen 80 default_server;
+        server_name _;
+        default_type text/plain;
+
+        location / {
+            return 200 'ewq $hostname\n v1';
+        }
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: nginx-configmap
+
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hw-app
+  name: hw-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hw-app
+  template:
+    metadata:
+      labels:
+        app: hw-app
+        version: "1.0"
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: config-nginx
+            mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: config-nginx
+          configMap:
+            name: nginx-configmap
+        
+
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hw-app
+  name: hw-canary
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hw-app
+  template:
+    metadata:
+      labels:
+        app: hw-app
+        version: "1.0"
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: config-nginx2
+            mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: config-nginx2
+          configMap:
+            name: nginx-configmap2
+
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hw-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "10"
+
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+             name: hw-app
+             port: 
+                number: 80
+        
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: hw-app
+  name: hw-app
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: hw-app
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+
+
