@@ -56,7 +56,7 @@ spec:
     metadata:
       labels:
         app: hw-app
-        version: "1.0"
+        tag: v1
     spec:
       containers:
       - image: nginx:latest
@@ -80,7 +80,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: hw-app
+    tag: v2
   name: hw-canary
 spec:
   replicas: 3
@@ -91,7 +91,7 @@ spec:
     metadata:
       labels:
         app: hw-app
-        version: "1.0"
+        tag: v2
     spec:
       containers:
       - image: nginx:latest
@@ -109,16 +109,56 @@ spec:
 
 ---
 
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: svc-app
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    tag: v1
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: svc-canary
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    tag: v2
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+
+---
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hw-ingress
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/canary: "true"
-    nginx.ingress.kubernetes.io/canary-weight: "10"
+    kubernetes.io/ingress.class: nginx
+
 
 spec:
+
+
   rules:
   - http:
       paths:
@@ -126,32 +166,33 @@ spec:
         pathType: Prefix
         backend:
           service:
-             name: hw-app
+             name: svc-app
              port: 
                 number: 80
-        
-
 
 ---
-
-
-apiVersion: v1
-kind: Service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  creationTimestamp: null
-  labels:
-    app: hw-app
-  name: hw-app
+  name: canary
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-by-header: "canary"
+    ginx.ingress.kubernetes.io/canary-by-header-value: "always"
+
+
 spec:
-  ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 80
-  selector:
-    app: hw-app
-  type: ClusterIP
-status:
-  loadBalancer: {}
 
 
+  rules:
+  - http:
+      paths:
 
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+             name: svc-canary
+             port: 
+                number: 80        
