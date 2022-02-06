@@ -1,0 +1,160 @@
+
+
+# previous deployment
+
+---
+
+
+apiVersion: v1
+data:
+  default.conf: |-
+    server {
+        listen 80 default_server;
+        server_name _;
+        default_type text/plain;
+
+        location / {
+            return 200 'ewq $hostname\n v1';
+        }
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: nginx-configmap
+
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hw-app
+  name: hw-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hw-app
+  template:
+    metadata:
+      labels:
+        app: hw-app
+        tag: v1
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: config-nginx
+            mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: config-nginx
+          configMap:
+            name: nginx-configmap
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: svc-app
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    tag: v1
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+
+---
+#task 1&2 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: hw-svc
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 9001
+  selector:
+    app: minio
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hw-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+             name: hw-svc
+             port: 
+                number: 80
+      - path: /web
+        pathType: Prefix
+        backend:
+          service:
+             name: svc-app
+             port: 
+                number: 80
+
+
+---
+
+#task 3 
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ed-test
+spec:
+
+
+  selector:
+    matchLabels:
+      app: ed-test
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ed-test
+    spec:
+      initContainers:
+        - name: busybox-init
+          image: busybox:1.32.0
+          command: ['sh', '-c', 'touch /temp/we']
+          volumeMounts:
+            - name: ed
+              mountPath: /temp
+      containers:
+      - image: nginx:latest
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: ed
+            mountPath: /temp 
+            
+      volumes:
+        - name: ed
+          emptyDir: {}
