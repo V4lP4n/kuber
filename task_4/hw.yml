@@ -1,0 +1,140 @@
+#task 1
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: deploy_view
+rules:
+- apiGroups: ["apps", ""] 
+  resources: ["pods", "deployments"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: deploy_edit
+rules:
+- apiGroups: ["apps", ""] 
+  resources: ["pods", "deployments"]
+  verbs: ["*"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deploy_view
+subjects:
+- kind: User
+  name: deploy_view
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: deploy_view
+  apiGroup: rbac.authorization.k8s.io
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deploy_edit
+subjects:
+- kind: User
+  name: deploy_edit
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: deploy_edit
+  apiGroup: rbac.authorization.k8s.io
+
+---
+#task2
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: prod
+  name: deploy_view_prod
+rules:
+- apiGroups: ["apps", ""] 
+  resources: ["pods", "deployments"]
+  verbs: ["get", "watch", "list"]
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: prod
+  name: admin_prod
+rules:
+- apiGroups: ["*"] 
+  resources: ["*"]
+  verbs: ["*"]
+
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deploy_view_prod
+  namespace: prod
+subjects:
+- kind: User
+  name: prod_view
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: deploy_view_prod
+  apiGroup: rbac.authorization.k8s.io
+
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prod_admin
+  namespace: prod
+subjects:
+- kind: User
+  name: prod_admin
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: admin_prod
+  apiGroup: rbac.authorization.k8s.io
+
+---
+#task3
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-namespace-admin
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: admindefault
+rules:
+- apiGroups: ["*"] 
+  resources: ["*"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: defaultadmin
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: sa-namespace-admin
+  namespace: default
+roleRef:
+  kind: Role
+  name: admindefault
+  apiGroup: rbac.authorization.k8s.io
